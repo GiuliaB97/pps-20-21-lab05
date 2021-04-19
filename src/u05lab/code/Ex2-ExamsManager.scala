@@ -21,27 +21,30 @@ object ExamsManager{
      var map:  mutable.Map[String, collection.mutable.HashMap[String, Int]] = mutable.Map()
 
      override def createNewCall(call: String): Unit =  {
+      val emptyMap: collection.mutable.HashMap[String, Int]= mutable.HashMap()
       if(!map.contains(call)) {
-        map.addOne(call, collection.mutable.HashMap.empty[String, Int])
+        map.addOne(call,emptyMap )
       }
     }
 
     override def addStudentResult(call: String, student: String, result: ExamResult): Unit = {
-      val tmp =collection.mutable.HashMap.empty[String, Int]
-      tmp.addOne((student, result.getEvaluation().toString.toInt))
-      if (map.contains(call)){
-        map.update(call,tmp)
+      val tmp :collection.mutable.HashMap[String, Int] = mutable.HashMap()
+      if(result.getEvaluation()!=Optional.empty()) {
+        tmp.addOne((student, result.getEvaluation().get()))
+        if (map.contains(call)) {
+          map.update(call, tmp)
+        }
       }
     }
 
     override def getAllStudentsFromCall(call: String): Set[String] = {
-      val set: scala.collection.mutable.Set[String]= scala.collection.mutable.Set()
+      val set: mutable.Set[String]= mutable.Set()
       map.foreach((entry)=>if(entry._1.contains(call)) (entry._2.foreach(student=> set.add(student._1))))
       set.toSet
     }
 
     override def getEvaluationsMapFromCall(call: String): Map[String, Integer] = {
-      val map2: collection.mutable.HashMap[String, Integer]= collection.mutable.HashMap()
+      val map2: mutable.HashMap[String, Integer]= mutable.HashMap()
 
       if(map.contains(call)){
         map.get(call).foreach((entry)=> entry.foreachEntry((student, result)=> map2.addOne(student, result)))
@@ -90,7 +93,8 @@ object ExamsManager{
   }
 
   case class ExamResultFactoryImpl() extends ExamResultFactory{
-    private case class ExamResultAbs(kind: Kind, evaluation: Optional[Integer], laude:Boolean) extends ExamResult{
+    private case class ExamResultAbs(kind: Kind, evaluation: Optional[Integer], laude:Boolean)
+                                                                            extends ExamResult{
       def getKind(): Kind= kind
       def getEvaluation(): Optional[Integer]= Optional.of(evaluation.get())
       def cumLaude(): Boolean = laude
@@ -99,10 +103,11 @@ object ExamsManager{
 
     override def retired(): ExamResult = ExamResultAbs(Kind.RETIRED, Optional.empty(), false)
 
-    override def succeededCumLaude(): ExamResult = ExamResultAbs(Kind.SUCCEEDED, Optional.of(30), true)
+    override def succeededCumLaude(): ExamResult = ExamResultAbs(Kind.SUCCEEDED,
+                                                Optional.of(30), true)
 
-    override def succeeded(evaluation: Int): ExamResult = ExamResultAbs(Kind.SUCCEEDED, Optional.of(evaluation), false)
-
+    override def succeeded(evaluation: Int): ExamResult = ExamResultAbs(Kind.SUCCEEDED,
+                                                        Optional.of(evaluation), false)
 }
 
 }
