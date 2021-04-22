@@ -77,6 +77,28 @@ class ListTest {
   //Non implementato non so da che parte partire
   @Test
   def testCollection(): Unit={
+    val list = 10 :: 20 :: 30 :: 40 :: Nil()
+    val finalValue = 9 :: 39 :: Nil()
+    val p1 = new PartialFunction[Int, Int] {
+      def isDefinedAt(x: Int) = x < 15 || x > 35
+      def apply(x:Int) = x - 1
+    }
+    /* Errore p1
+    org.opentest4j.AssertionFailedError:
+    Expected :Cons(9,Cons(39,Nil()))
+    Actual   :Cons(9,Cons(19,Cons(29,Cons(39,Nil()))))
+     */
+    val p2 : PartialFunction[Int, Int] = {
+      case x if(x < 15 || x > 35) => x-1
+     }
+  /* errore p2
+  scala.MatchError: 20 (of class java.lang.Integer)
+   */
+    assertEquals(finalValue, list.collect(p2))
+  }
+
+  @Test
+  def testSequence(): Unit={
 
   }
 }

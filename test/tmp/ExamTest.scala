@@ -1,5 +1,6 @@
-package u05lab
-import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertTrue}
+package tmp
+
+import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertThrows, assertTrue}
 import org.junit.jupiter.api.Test
 import u05lab.code.ExamsManagerTest.{ExamsManager, _}
 
@@ -11,37 +12,35 @@ class ExamTest {
   @Test
   def testExamResultBasicBehaviour() {
     //esame fallito, non c'è voto
-    assertEquals(erf.failed().getKind(),  Kind.FAILED)
-    //assertFalse(erf.failed().getEvaluation().isPresent())
-    //assertFalse(erf.failed().cumLaude())
-    // lo studente si è ritirato, non c'è voto
-    assertEquals(erf.retired().getKind(), Kind.RETIRED)
-    //assertFalse(erf.retired().getEvaluation().isPresent())
-    //assertFalse(erf.retired().cumLaude());
-    // 30L
+    assertEquals(erf.failed().getKind,  Kind.FAILED)
+    assertFalse(erf.failed().getEvaluation.isDefined)
+    assertFalse(erf.failed().cumLaude)
+		// lo studente si è ritirato, non c'è voto
+    assertEquals(erf.retired().getKind, Kind.RETIRED)
+    assertFalse(erf.retired().getEvaluation.isDefined)
+    assertFalse(erf.retired().cumLaude);
+		// 30L
     assertEquals(erf.succeededCumLaude().getKind(), Kind.SUCCEEDED)
-    assertEquals(erf.succeededCumLaude().getEvaluation(), Optional.of(30))
+    assertEquals(erf.succeededCumLaude().getEvaluation, Option.apply(30))
     assertTrue(erf.succeededCumLaude().cumLaude())
 
     // esame superato, ma non con lode
     assertEquals(erf.succeeded(28).getKind(), Kind.SUCCEEDED)
-    assertEquals(erf.succeeded(28).getEvaluation(), Optional.of(28))
-    assertFalse(erf.succeeded(28).cumLaude())
-  }
+    assertEquals(erf.succeeded(28).getEvaluation, Option.apply(28))
+    assertFalse(erf.succeeded(28).cumLaude)
+	}
 
-/*
+
 	// verifica eccezione in ExamResultFactory
-	@org.junit.Test(expected = IllegalArgumentException.class)
-    public void optionalTestEvaluationCantBeGreaterThan30() {
-		erf.succeeded(32);
+	@Test def optionalTestEvaluationCantBeGreaterThan30(): Unit ={
+		assertThrows(classOf[IllegalArgumentException], () => erf.succeeded(32))
     }
 
 	// verifica eccezione in ExamResultFactory
-	@org.junit.Test(expected = IllegalArgumentException.class)
-    public void optionalTestEvaluationCantBeSmallerThan18() {
-		erf.succeeded(17);
+	@Test def optionalTestEvaluationCantBeSmallerThan18() {
+		assertThrows(classOf[IllegalArgumentException], () => erf.succeeded(17))
     }
-  */
+
 
 	// metodo di creazione di una situazione di risultati in 3 appelli
 
@@ -110,17 +109,15 @@ class ExamTest {
 		assertEquals(em.getBestResultFromStudent("viola"),Optional.empty());
 	}
 
-	/*
-	@org.junit.Test(expected = IllegalArgumentException.class)
-    public void optionalTestCantCreateACallTwice() {
+
+	@Test def optionalTestCantCreateACallTwice() {
 		this.prepareExams();
-		em.createNewCall("marzo");
+		assertThrows(classOf[IllegalArgumentException], () => em.createNewCall("marzo"))
     }
 
-	@org.junit.Test(expected = IllegalArgumentException.class)
-    public void optionalTestCantRegisterAnEvaluationTwice() {
+	@Test def optionalTestCantRegisterAnEvaluationTwice() {
 		this.prepareExams();
-		em.addStudentResult("gennaio", "verdi", erf.failed());
+		assertThrows(classOf[IllegalArgumentException], () => em.addStudentResult("gennaio", "verdi", erf.failed()))
     }
-    */
+
 }

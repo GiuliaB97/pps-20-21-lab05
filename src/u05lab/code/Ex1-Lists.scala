@@ -1,10 +1,6 @@
 package u05lab.code
 
 sealed trait List[A] {
-  //EX6 COLLECTION->Extend List with a collect function that accepts a
-  //PartialFunction[A,B] and performs map & filter in one shot
-  def collect(partialFunction: A): A
-
   def head: Option[A]
 
   def tail: Option[List[A]]
@@ -39,6 +35,9 @@ sealed trait List[A] {
 
   def takeRight(n: Int): List[A]
 
+  def collect[A,B](partialFunction: PartialFunction[A,B]): List[B]
+
+  def sequence[A](a: List[Option[A]]): Option[List[A]]
   // right-associative construction: 10 :: 20 :: 30 :: Nil()
   def ::(head: A): List[A] = Cons(head,this)
 }
@@ -124,22 +123,19 @@ trait ListImplementation[A] extends List[A] {
     case Nil() => Nil()
   }
 
-  //EX1 : OK
+  //EX1 :
   override def zipRight: List[(A, Int)] = {
     var k = -1
     this.map(e => {
       k += 1; (e, k)
-    }) //RICORDA la map mi da in output un numero di elementi pari a quello preso in ingresso nella lista, cambiati secondo il filtro passato
-    //la flatMap no
+    }) //RICORDA la map mi da in output un numero di elementi pari a quello preso in ingresso nella lista, cambiati secondo il filtro passato, la flatMap no
   }
 
-  def neg[A](predicate: A => Boolean): A => Boolean = !predicate(_)
+  private def neg[A](predicate: A => Boolean): A => Boolean = !predicate(_)
 
-  //EX2 : OK
+  //EX2 :
   override def partition(pred: A => Boolean): (List[A], List[A]) = {
-    val l1 = this.filter(pred)
-    val l2 = this.filter(neg(pred))
-    (l1, l2)
+    (this.filter(pred), this.filter(neg(pred)))
   }
 
   private def filterR(predicate: (A) => Boolean): List[A] = this match {
@@ -157,7 +153,7 @@ trait ListImplementation[A] extends List[A] {
     (this.filterR(pred), this.filterL(pred))
   }
 
-  //EX4:FOLD
+  //EX4:
   /**
     *
     * @throws UnsupportedOperationException if the list is empty
@@ -168,20 +164,29 @@ trait ListImplementation[A] extends List[A] {
     case _ => throw new UnsupportedOperationException()
   }
 
-  //EX5: TAKERIGHT
+  //EX5:
   override def takeRight(n: Int): List[A] = {
-
     def _takeRight(n: Int, list: List[A]): List[A] = list match { //Ricorda di fare il match su list e non su this, se no lui matcha sempre sulla lista originale
       case Cons(h, t) if (n > 0) => Cons(h, _takeRight(n - 1, t))
       case _ => Nil()
     }
-
-    var list = _takeRight(n, this.reverse)
-    list = list.reverse()
-    list
+    _takeRight(n, this.reverse).reverse()
   }
 
-  override def collect(partialFunction: A): A = ???
+  override def collect[A,B](partialFunction: PartialFunction[A,B]):List[B] = {
+    val list: ListImplementation[A] = this.asInstanceOf[ListImplementation[A]]
+    var list2: ListImplementation[B]= Nil()
+     def _collect( list: ListImplementation[A], partialFunction: PartialFunction[A,B]): ListImplementation[B]= list match{
+       case h::t => list2 = list2.append(Cons(partialFunction(h), Nil())).asInstanceOf[ListImplementation[B]];
+                    _collect ( t.asInstanceOf[ListImplementation[A]] , partialFunction);
+       case _=> list2
+  }
+    _collect(list, partialFunction)
+
+  }
+
+  //es 4: O
+  override def sequence[A](a: List[Option[A]]): Option[List[A]]= ???
 }
 // Factories
 object List {
@@ -204,7 +209,7 @@ object ListsTest extends App {
 
 import List._  // Working with the above lists
 println(List(10,20,30,40))
-val l = 10 :: 20 :: 30 :: 40 :: Nil() // same as above
+val l: List[Int] = 10 :: 20 :: 30 :: 40 :: Nil() // same as above
 println(l.head) // 10
 println(l.tail) // 20,30,40
 println(l append l) // 10,20,30,40,10,20,30,40
@@ -236,5 +241,10 @@ try { List[Int]().reduce(_+_); assert(false) } catch { case _:UnsupportedOperati
 println("take right" + l.takeRight(2)) // Cons(30,Cons(40,Nil()))
 
 // Ex. 6: collect
+  val p = new PartialFunction[Int, Int] {
+    def apply(x: Int): Int = x - 1
+    def isDefinedAt(x: Int): Boolean = x < 15 || x > 35
+  }
 //println(l.collect { case x if x<15 || x>35 => x-1 }) // Cons(9, Cons(39, Nil()))
+  println(l.collect(p))
 }

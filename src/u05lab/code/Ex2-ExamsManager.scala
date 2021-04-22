@@ -1,6 +1,4 @@
 package u05lab.code
-
-import java.util.Optional
 import scala.collection.mutable
 object ExamsManagerTest extends App {
 
@@ -12,7 +10,7 @@ object ExamsManagerTest extends App {
     def getAllStudentsFromCall(call: String): Set[String]
     def getEvaluationsMapFromCall(call: String): Map[String, Integer]
     def getResultsMapFromStudent(student: String): Map[String, String]
-    def getBestResultFromStudent(student: String): Optional[Integer]
+    def getBestResultFromStudent(student: String): Option[Integer]
 
   }
 object ExamsManager{
@@ -21,25 +19,21 @@ object ExamsManager{
      var map:  mutable.Map[String, collection.mutable.HashMap[String, Int]] = mutable.Map()
 
      override def createNewCall(call: String): Unit =  {
-      val emptyMap: collection.mutable.HashMap[String, Int]= mutable.HashMap()
       if(!map.contains(call)) {
-        map.addOne(call,emptyMap )
+        map.addOne(call,mutable.HashMap())
       }
     }
-
+//per il problema è qui; nel senso che se non passa l'esame io non lo metto(credo perchè non sarpe che risultato mettere)
     override def addStudentResult(call: String, student: String, result: ExamResult): Unit = {
-      val tmp :collection.mutable.HashMap[String, Int] = mutable.HashMap()
-      if(result.getEvaluation()!=Optional.empty()) {
-        tmp.addOne((student, result.getEvaluation().get()))
-        if (map.contains(call)) {
-          map.update(call, tmp)
-        }
-      }
+      if(!map.get(call).contains(student))
+        map(call)+=(student-> result.getEvaluation().get)
+      else
+        throw new IllegalArgumentException
     }
 
     override def getAllStudentsFromCall(call: String): Set[String] = {
       val set: mutable.Set[String]= mutable.Set()
-      map.foreach((entry)=>if(entry._1.contains(call)) (entry._2.foreach(student=> set.add(student._1))))
+      map.foreach((entry)=>if(entry._1.contains(call)) entry._2.foreach(student=> set.add(student._1)))
       set.toSet
     }
 
@@ -60,13 +54,13 @@ object ExamsManager{
       sm.toMap
     }
 
-    override def getBestResultFromStudent(student: String): Optional[Integer] = {
+    override def getBestResultFromStudent(student: String): Option[Integer] = {
       var tmp=0
       getResultsMapFromStudent(student).foreach(elem=> if(elem._2.toInt> tmp) tmp=elem._2.toInt)
       if(tmp!=0) {
-        Optional.of(tmp)
+        Option(tmp)
       }else{
-        Optional.empty()
+        Option.empty
       }
     }
   }
@@ -81,7 +75,7 @@ object ExamsManager{
   // Define a new enumeration with a type alias and work with the full set of enumerated values
   trait ExamResult{
     def getKind(): Kind
-    def getEvaluation(): Optional[Integer]
+    def getEvaluation(): Option[Integer]
     def cumLaude(): Boolean
   }
 
@@ -93,21 +87,18 @@ object ExamsManager{
   }
 
   case class ExamResultFactoryImpl() extends ExamResultFactory{
-    private case class ExamResultAbs(kind: Kind, evaluation: Optional[Integer], laude:Boolean)
-                                                                            extends ExamResult{
+    private case class ExamResultAbs(kind: Kind, evaluation: Option[Integer], laude:Boolean) extends ExamResult{
       def getKind(): Kind= kind
-      def getEvaluation(): Optional[Integer]= Optional.of(evaluation.get())
+      def getEvaluation(): Option[Integer]= evaluation
       def cumLaude(): Boolean = laude
     }
-    override def failed(): ExamResult = ExamResultAbs(Kind.FAILED, Optional.empty(), false)
+    override def failed(): ExamResult = ExamResultAbs(Kind.FAILED, Option.empty, false)
 
-    override def retired(): ExamResult = ExamResultAbs(Kind.RETIRED, Optional.empty(), false)
+    override def retired(): ExamResult = ExamResultAbs(Kind.RETIRED, Option.empty, false)
 
-    override def succeededCumLaude(): ExamResult = ExamResultAbs(Kind.SUCCEEDED,
-                                                Optional.of(30), true)
+    override def succeededCumLaude(): ExamResult = ExamResultAbs(Kind.SUCCEEDED, Option(30), true)
 
-    override def succeeded(evaluation: Int): ExamResult = ExamResultAbs(Kind.SUCCEEDED,
-                                                        Optional.of(evaluation), false)
+    override def succeeded(evaluation: Int): ExamResult = ExamResultAbs(Kind.SUCCEEDED, Option(evaluation), false)
 }
 
 }
