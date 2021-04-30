@@ -1,4 +1,4 @@
-package tmp
+package u05lab
 
 import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertThrows, assertTrue}
 import org.junit.jupiter.api.Test
